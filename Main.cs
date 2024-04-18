@@ -31,8 +31,8 @@ namespace SQS_station_cycle_time
         string ipAddress = "127.0.0.1";
 
         Stopwatch stopwatch = new Stopwatch();
-        TimeSpan elapsedTMax = TimeSpan.FromSeconds(8);
-        TimeSpan elapsedTMin = TimeSpan.FromSeconds(3);
+        TimeSpan elapsedTMax; 
+        TimeSpan elapsedTMin; 
 
         string pathPrintOut = "C:\\ProgramData\\Atlas Copco\\SQS\\LBMS\\work\\printout";
 
@@ -102,6 +102,15 @@ namespace SQS_station_cycle_time
             }
 
             return _currentText.ToString();
+        }
+
+        public void GetParameters()
+        {
+            string query = @"SELECT [STATION]
+                                  ,[SCREEN]
+                                  ,[ET_MAX]
+                                  ,[ET_MIN]
+                              FROM [SQS_SCT].[dbo].[PARAMETERS]";
         }
 
         public void InsertValuesDB(TimeSpan elapsedTime)

@@ -23,6 +23,9 @@ namespace Results_client
         Thread ClientThread;
 
         bool mem = false;
+        bool newPID = false;
+        bool timerStart = false;
+        bool timerStop = false;
 
         public Results()
         {
@@ -37,11 +40,15 @@ namespace Results_client
                 ClientThread.Start();
 
                 Btn_connect.Text = "Stop Listening";
+
+                tim1.Start();
             }
             else if (Btn_connect.Text == "Stop Listening")
             {
                 cts.Cancel();
                 ClientThread = null;
+
+                tim1.Stop();
 
                 Btn_connect.Text = "Start Listening";
             }
@@ -59,12 +66,34 @@ namespace Results_client
                 {
                     data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
-                    this.Invoke((MethodInvoker)delegate {
+                    this.Invoke((MethodInvoker)delegate
+                    {
                         // Updating label text.
-                        Tb_ClientConsole.Text = data;
+                        Tb_ClientConsole.Text += "cmd received: " + data + "\r\n";
+
+                        switch (data)
+                        {
+                            case "cmd-NewPID":
+                                newPID = true;
+                                break;
+                            case "cmd-TimerStart":
+                                timerStart = true;
+                                break;
+                            case "cmd-TimerStop":
+                                timerStop = true;
+                                break;
+                        }
                     });
                     mem = true;
                 }
+
+            }
+        }
+
+        private void tim1_Tick(object sender, EventArgs e)
+        {
+            if (newPID)
+            {
 
             }
         }

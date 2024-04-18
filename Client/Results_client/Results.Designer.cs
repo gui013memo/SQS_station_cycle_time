@@ -28,8 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.Btn_connect = new System.Windows.Forms.Button();
             this.Tb_ClientConsole = new System.Windows.Forms.TextBox();
+            this.tim1 = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // Btn_connect
@@ -50,6 +52,10 @@
             this.Tb_ClientConsole.Size = new System.Drawing.Size(346, 253);
             this.Tb_ClientConsole.TabIndex = 1;
             // 
+            // tim1
+            // 
+            this.tim1.Tick += new System.EventHandler(this.tim1_Tick);
+            // 
             // Results
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
@@ -68,6 +74,7 @@
 
         private System.Windows.Forms.Button Btn_connect;
         private System.Windows.Forms.TextBox Tb_ClientConsole;
+        private System.Windows.Forms.Timer tim1;
     }
 }
 
