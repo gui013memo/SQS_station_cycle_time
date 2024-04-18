@@ -28,34 +28,46 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
+            this.Btn_connect = new System.Windows.Forms.Button();
+            this.Tb_ClientConsole = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
-            // button1
+            // Btn_connect
             // 
-            this.button1.Location = new System.Drawing.Point(95, 291);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(156, 115);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.Btn_connect.Location = new System.Drawing.Point(92, 283);
+            this.Btn_connect.Name = "Btn_connect";
+            this.Btn_connect.Size = new System.Drawing.Size(132, 63);
+            this.Btn_connect.TabIndex = 0;
+            this.Btn_connect.Text = "Start Listening";
+            this.Btn_connect.UseVisualStyleBackColor = true;
+            this.Btn_connect.Click += new System.EventHandler(this.Btn_connect_Click);
+            // 
+            // Tb_ClientConsole
+            // 
+            this.Tb_ClientConsole.Location = new System.Drawing.Point(12, 12);
+            this.Tb_ClientConsole.Multiline = true;
+            this.Tb_ClientConsole.Name = "Tb_ClientConsole";
+            this.Tb_ClientConsole.Size = new System.Drawing.Size(346, 253);
+            this.Tb_ClientConsole.TabIndex = 1;
             // 
             // Results
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Controls.Add(this.button1);
+            this.ClientSize = new System.Drawing.Size(370, 358);
+            this.Controls.Add(this.Tb_ClientConsole);
+            this.Controls.Add(this.Btn_connect);
             this.Name = "Results";
             this.Text = "Form1";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button Btn_connect;
+        private System.Windows.Forms.TextBox Tb_ClientConsole;
     }
 }
 

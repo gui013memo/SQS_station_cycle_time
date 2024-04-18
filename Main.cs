@@ -39,22 +39,28 @@ namespace SQS_station_cycle_time
         bool mem = false;
         bool mem2 = false;
 
+        CancellationTokenSource cts = new CancellationTokenSource();
         Thread TCPThread;
 
-        public Main()
-        {
-            InitializeComponent();
-            this.FormClosed += Main_FormClosed;
-            logger.Log("EngineNumber-Checker app Opened!");
+        TcpListener server = null;
 
+        public Main()
+        { 
+            InitializeComponent();
+            this.FormClosing += Main_FormClosing;
+            logger.Log("EngineNumber-Checker app Opened!");
+             
             this.TopMost = true;
 
             appStartTime = DateTime.Now;
         }
 
-        private void Main_FormClosed(object sender, FormClosedEventArgs e)
+        private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
+            server.Stop(); 
+            cts.Cancel();
             logger.Log("SQS_SCT app closed");
+            TCPThread = null;
         }
 
         public string ExtractTextFromXps(string filePath)
@@ -245,21 +251,28 @@ namespace SQS_station_cycle_time
         {
             if (Btn_startTCPServer.Text == "GO TCP")
             {
-                TCPThread = new Thread(new ThreadStart(TCPWorkThread));
+                TCPThread = new Thread(() => TCPWorkThread(cts.Token));
                 TCPThread.Start();
+
+                Btn_startTCPServer.Text = "TOFF TCP";
             }
             else if (Btn_startTCPServer.Text == "TOFF TCP")
             {
-                TCPThread.Abort();
+                server.Stop();
+
+                cts.Cancel();
                 TCPThread = null;
+
+                Btn_startTCPServer.Text = "GO TCP";
+
+                Tb_TCPConsole.Text = "";
             }
         }
 
-        private void TCPWorkThread()
+        private void TCPWorkThread(CancellationToken token)
         {
             bool tmem = false;
 
-            TcpListener server = null;
             Int32 port = 13000;
             IPAddress localAddr = IPAddress.Parse(Tb_connStringTCPServer.Text);
 
@@ -268,10 +281,19 @@ namespace SQS_station_cycle_time
             try
             {
                 server.Start();
-                Tb_TCPConsole.Text += ("Waiting for a connection... ");
+                this.Invoke((MethodInvoker)delegate
+                {
+                    Tb_TCPConsole.Text += ("Waiting for a connection... ");
+                });
+
 
                 TcpClient client = server.AcceptTcpClient();
-                Tb_TCPConsole.Text += ("Connected!");
+                server.Start();
+                this.Invoke((MethodInvoker)delegate
+                {
+                    Tb_TCPConsole.Text += ("Connected!");
+                });
+
 
                 NetworkStream stream = client.GetStream();
 
