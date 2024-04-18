@@ -36,14 +36,15 @@
             this.lb_Clients = new System.Windows.Forms.Label();
             this.lb_ClientsQty = new System.Windows.Forms.Label();
             this.Tb_Console = new System.Windows.Forms.TextBox();
-            this.button1 = new System.Windows.Forms.Button();
-            this.tb_test = new System.Windows.Forms.TextBox();
+            this.Btn_startTCPServer = new System.Windows.Forms.Button();
+            this.Tb_connStringTCPServer = new System.Windows.Forms.TextBox();
+            this.Tb_TCPConsole = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // Btn_start
             // 
             this.Btn_start.Location = new System.Drawing.Point(16, 350);
-            this.Btn_start.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Btn_start.Margin = new System.Windows.Forms.Padding(4);
             this.Btn_start.Name = "Btn_start";
             this.Btn_start.Size = new System.Drawing.Size(284, 69);
             this.Btn_start.TabIndex = 0;
@@ -101,46 +102,57 @@
             // Tb_Console
             // 
             this.Tb_Console.Location = new System.Drawing.Point(16, 7);
-            this.Tb_Console.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Tb_Console.Margin = new System.Windows.Forms.Padding(4);
             this.Tb_Console.Multiline = true;
             this.Tb_Console.Name = "Tb_Console";
             this.Tb_Console.Size = new System.Drawing.Size(283, 334);
             this.Tb_Console.TabIndex = 5;
             // 
-            // button1
+            // Btn_startTCPServer
             // 
-            this.button1.Location = new System.Drawing.Point(352, 369);
-            this.button1.Margin = new System.Windows.Forms.Padding(4);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(50, 50);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "START";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.Btn_startTCPServer.Location = new System.Drawing.Point(336, 369);
+            this.Btn_startTCPServer.Margin = new System.Windows.Forms.Padding(4);
+            this.Btn_startTCPServer.Name = "Btn_startTCPServer";
+            this.Btn_startTCPServer.Size = new System.Drawing.Size(53, 50);
+            this.Btn_startTCPServer.TabIndex = 6;
+            this.Btn_startTCPServer.Text = "GO TCP";
+            this.Btn_startTCPServer.UseVisualStyleBackColor = true;
+            this.Btn_startTCPServer.Click += new System.EventHandler(this.Btn_startTCPServer_Click);
             // 
-            // tb_test
+            // Tb_connStringTCPServer
             // 
-            this.tb_test.Location = new System.Drawing.Point(319, 319);
-            this.tb_test.Margin = new System.Windows.Forms.Padding(4);
-            this.tb_test.Name = "tb_test";
-            this.tb_test.Size = new System.Drawing.Size(83, 22);
-            this.tb_test.TabIndex = 7;
+            this.Tb_connStringTCPServer.Location = new System.Drawing.Point(319, 339);
+            this.Tb_connStringTCPServer.Margin = new System.Windows.Forms.Padding(4);
+            this.Tb_connStringTCPServer.Name = "Tb_connStringTCPServer";
+            this.Tb_connStringTCPServer.Size = new System.Drawing.Size(83, 22);
+            this.Tb_connStringTCPServer.TabIndex = 7;
+            this.Tb_connStringTCPServer.Text = "172.16.90.231";
+            // 
+            // Tb_TCPConsole
+            // 
+            this.Tb_TCPConsole.Location = new System.Drawing.Point(307, 245);
+            this.Tb_TCPConsole.Margin = new System.Windows.Forms.Padding(4);
+            this.Tb_TCPConsole.Multiline = true;
+            this.Tb_TCPConsole.Name = "Tb_TCPConsole";
+            this.Tb_TCPConsole.Size = new System.Drawing.Size(109, 86);
+            this.Tb_TCPConsole.TabIndex = 8;
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(415, 432);
-            this.Controls.Add(this.tb_test);
-            this.Controls.Add(this.button1);
+            this.ClientSize = new System.Drawing.Size(426, 432);
+            this.Controls.Add(this.Tb_TCPConsole);
+            this.Controls.Add(this.Tb_connStringTCPServer);
+            this.Controls.Add(this.Btn_startTCPServer);
             this.Controls.Add(this.Tb_Console);
             this.Controls.Add(this.lb_ClientsQty);
             this.Controls.Add(this.lb_Clients);
             this.Controls.Add(this.lb_Server);
             this.Controls.Add(this.lb_ServerStatus);
             this.Controls.Add(this.Btn_start);
-            this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Main";
             this.Text = "SQS_Station_cycle_time";
             this.ResumeLayout(false);
@@ -157,8 +169,9 @@
         private System.Windows.Forms.Label lb_Clients;
         private System.Windows.Forms.Label lb_ClientsQty;
         private System.Windows.Forms.TextBox Tb_Console;
-        private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.TextBox tb_test;
+        private System.Windows.Forms.Button Btn_startTCPServer;
+        private System.Windows.Forms.TextBox Tb_connStringTCPServer;
+        private System.Windows.Forms.TextBox Tb_TCPConsole;
     }
 }
 

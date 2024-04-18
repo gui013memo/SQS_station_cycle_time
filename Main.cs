@@ -12,12 +12,16 @@ using System.Text;
 using System.Windows.Xps.Packaging;
 using System.Xml;
 using System.IO;
+using System.Net.Sockets;
+using GroupDocs.Viewer.Results;
+using System.Threading;
 
 
 namespace SQS_station_cycle_time
 {
     public partial class Main : Form
     {
+        DateTime appStartTime;
         Logger logger = new Logger();
 
         //string connectionString = @"Data Source=localhost;Initial Catalog=SQS_SCT;User ID=SQS_SCT-user;Password=sqs;Trusted_Connection=True";
@@ -33,6 +37,9 @@ namespace SQS_station_cycle_time
         string pathPrintOut = "C:\\ProgramData\\Atlas Copco\\SQS\\LBMS\\work\\printout";
 
         bool mem = false;
+        bool mem2 = false;
+
+        Thread TCPThread;
 
         public Main()
         {
@@ -41,6 +48,8 @@ namespace SQS_station_cycle_time
             logger.Log("EngineNumber-Checker app Opened!");
 
             this.TopMost = true;
+
+            appStartTime = DateTime.Now;
         }
 
         private void Main_FormClosed(object sender, FormClosedEventArgs e)
@@ -143,6 +152,14 @@ namespace SQS_station_cycle_time
         {
             //To Do:  TREAT THE EXCEPTIONS SUCH AS: PRODUCT RELEASE...
             //Elapsed time is get by application stopwatch, exact time of beginning and ending of screen is disregarded
+            string[] fileNames = Directory.GetFiles(pathPrintOut);
+
+            if (Directory.GetCreationTime(fileNames[fileNames.Length - 1]) > appStartTime && !mem2)
+            {
+                logger.Log("New PID: " + ExtractTextFromXps(pathPrintOut));
+
+                mem2 = true;
+            }
 
             if (ModServer.holdingRegisters[1] == 1 && !mem)
             {
@@ -155,6 +172,7 @@ namespace SQS_station_cycle_time
             else if (ModServer.holdingRegisters[1] == 2 && mem)
             {
                 mem = false;
+                mem2 = false;
                 stopwatch.Stop();
                 InsertValuesDB(stopwatch.Elapsed);
 
@@ -223,23 +241,72 @@ namespace SQS_station_cycle_time
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Btn_startTCPServer_Click(object sender, EventArgs e)
         {
+            if (Btn_startTCPServer.Text == "GO TCP")
+            {
+                TCPThread = new Thread(new ThreadStart(TCPWorkThread));
+                TCPThread.Start();
+            }
+            else if (Btn_startTCPServer.Text == "TOFF TCP")
+            {
+                TCPThread.Abort();
+                TCPThread = null;
+            }
+        }
 
-            //try
-            //{
-            //    string[] fileNames = Directory.GetFiles(pathPrintOut);
-            //    Tb_Console.Text = ExtractTextFromXps(fileNames[fileNames.Length - 1]);
-            //}
-            //catch (Exception exc)
-            //{
-            //    //TREAT
-            //}
+        private void TCPWorkThread()
+        {
+            bool tmem = false;
 
+            TcpListener server = null;
+            Int32 port = 13000;
+            IPAddress localAddr = IPAddress.Parse(Tb_connStringTCPServer.Text);
 
+            server = new TcpListener(localAddr, port);
 
-            //ModServer.holdingRegisters[2] = short.Parse(tb_test.Text);
+            try
+            {
+                server.Start();
+                Tb_TCPConsole.Text += ("Waiting for a connection... ");
 
+                TcpClient client = server.AcceptTcpClient();
+                Tb_TCPConsole.Text += ("Connected!");
+
+                NetworkStream stream = client.GetStream();
+
+                while (client.Connected)
+                {
+                    if (mem2 && !tmem)
+                    {
+                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-NewPID");
+
+                        stream.Write(data, 0, data.Length);
+
+                        tmem = true;
+                    }
+
+                    if (mem && tmem)
+                    {
+                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStart");
+
+                        stream.Write(data, 0, data.Length);
+                    }
+                    else if (!mem && tmem)
+                    {
+                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStop");
+
+                        stream.Write(data, 0, data.Length);
+
+                        tmem = false;
+                    }
+
+                }
+            }
+            catch (SocketException exc)
+            {
+                logger.Log("SocketException: \r\n" + exc);
+            }
         }
     }
 }
