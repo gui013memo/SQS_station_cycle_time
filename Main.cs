@@ -38,6 +38,7 @@ namespace SQS_station_cycle_time
 
         bool mem = false;
         bool mem2 = false;
+        bool memServer = false;
 
         CancellationTokenSource cts = new CancellationTokenSource();
         Thread TCPThread;
@@ -57,8 +58,12 @@ namespace SQS_station_cycle_time
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            server.Stop(); 
-            cts.Cancel();
+            if (memServer)
+            {
+                server.Stop();
+                cts.Cancel();
+            }
+          
             logger.Log("SQS_SCT app closed");
             TCPThread = null;
         }
@@ -224,7 +229,7 @@ namespace SQS_station_cycle_time
                 lb_ClientsQty.Text = "0";
             }
         }
-
+         
         private void Timer1_Tick(object sender, EventArgs e)
         {
             if (Btn_start.Text == "STOP")
@@ -255,6 +260,8 @@ namespace SQS_station_cycle_time
                 TCPThread.Start();
 
                 Btn_startTCPServer.Text = "TOFF TCP";
+
+                memServer = true;
             }
             else if (Btn_startTCPServer.Text == "TOFF TCP")
             {

@@ -22,6 +22,8 @@ namespace Results_client
         CancellationTokenSource cts = new CancellationTokenSource();
         Thread ClientThread;
 
+        bool mem = false;
+
         public Results()
         {
             InitializeComponent();
@@ -53,7 +55,7 @@ namespace Results_client
             while (true)
             {
                 int i;
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 && !mem)
                 {
                     data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
@@ -61,7 +63,9 @@ namespace Results_client
                         // Updating label text.
                         Tb_ClientConsole.Text = data;
                     });
+                    mem = true;
                 }
+
             }
         }
     }
