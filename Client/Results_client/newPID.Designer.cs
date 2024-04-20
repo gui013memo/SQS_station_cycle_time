@@ -105,6 +105,7 @@
             this.Controls.Add(this.lb_CurrentEngineNumber);
             this.Name = "newPID";
             this.Text = "newPID";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -62,14 +62,36 @@ namespace SQS_station_cycle_time
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (memServer)
+            try
             {
-                server.Stop();
+                if(isListening)
+                    server.Stop();
+
                 cts.Cancel();
+
+                //  TCPThread.Abort();
+                TCPThread = null;
+            }
+            catch (SocketException se)
+            {
+                logger.Log("SocketException on FormClosing: " + se);
+            }
+            catch (ObjectDisposedException oe)
+            {
+                logger.Log("ObjectDisposedException on FormClosing: " + oe);
+            }
+            catch (AggregateException ae)
+            {
+                logger.Log("AggregateException on FormClosing: " + ae);
+            }
+            catch (ThreadStateException te)
+            {
+                logger.Log("ThreadStateException on FormClosing: " + te);
             }
 
+
             logger.Log("SQS_SCT app closed");
-            TCPThread = null;
+
         }
 
         public string ExtractTextFromXps(string filePath)
@@ -141,9 +163,9 @@ namespace SQS_station_cycle_time
             string result = null;
 
             if (elapsedTime > elapsedTMax)
-                result = "NG HIGH - Time above max";
+                result = "NG HIGH";
             else if (elapsedTime < elapsedTMin)
-                result = "NG LOW - Time below min";
+                result = "NG LOW";
             else
                 result = "OK";
 
@@ -181,6 +203,8 @@ namespace SQS_station_cycle_time
             }
             catch (SqlException ex)
             {
+                Tb_Console.Text = "ERROR INSERTING SQL";
+
                 logger.Log("Error on inserting: "
                     + "\r\nElapsed time: " + elapsedTime
                     + "\r\nProd ID 1: " + productID
@@ -265,7 +289,15 @@ namespace SQS_station_cycle_time
             else if (Btn_start.Text == "STOP")
             {
                 logger.Log("Button STOP hitted");
-                ModServer.StopListening();
+
+                try
+                {
+                    ModServer.StopListening();
+                }
+                catch(ThreadStateException ex)
+                {
+                    logger.Log("Exception on stopping medserver on stop button: " + ex);
+                }
                 ModServer = null;
 
                 Timer1.Stop();
@@ -313,11 +345,32 @@ namespace SQS_station_cycle_time
             }
             else if (Btn_startTCPServer.Text == "TOFF TCP")
             {
-                if (isListening)
+                try
+                {
+
                     server.Stop();
 
-                cts.Cancel();
-                TCPThread = null;
+                    cts.Cancel();
+
+                    //  TCPThread.Abort();
+                    TCPThread = null;
+                }
+                catch (SocketException se)
+                {
+                    logger.Log("SocketException on FormClosing: " + se);
+                }
+                catch (ObjectDisposedException oe)
+                {
+                    logger.Log("ObjectDisposedException on FormClosing: " + oe);
+                }
+                catch (AggregateException ae)
+                {
+                    logger.Log("AggregateException on FormClosing: " + ae);
+                }
+                catch (ThreadStateException te)
+                {
+                    logger.Log("ThreadStateException on FormClosing: " + te);
+                }
 
                 Btn_startTCPServer.Text = "GO TCP";
 
@@ -329,7 +382,6 @@ namespace SQS_station_cycle_time
         {
             bool tmem = false;
             bool tmem2 = false;
-            bool isWaitingForClientACK = false;
 
             Int32 port = 13000;
             IPAddress localAddr = IPAddress.Parse(Tb_connStringTCPServer.Text);
@@ -402,8 +454,15 @@ namespace SQS_station_cycle_time
                 }
                 catch (SocketException exc)
                 {
-                    logger.Log("SocketException: \r\n" + exc);
-
+                    string str = exc.ToString();
+                    if (str.Contains("0x80004005"))
+                    {
+                        logger.Log("Exception on TCPWorkThread func controlled (0x80004005), the cancelation token went to true and stopped TCPThread.");
+                    }
+                    else
+                    {
+                        logger.Log("SocketException on TCPWorkThread func: \r\n" + exc);
+                    }
                     server.Stop();
                     isListening = false;
                 }

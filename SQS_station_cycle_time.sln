@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34408.163
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQS_station_cycle_time", "SQS_station_cycle_time.csproj", "{9162ED94-6C43-4503-818C-FCD936543ECC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "1SQS_station_cycle_time", "1SQS_station_cycle_time.csproj", "{9162ED94-6C43-4503-818C-FCD936543ECC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Results_client", "Client\Results_client\Results_client.csproj", "{D66117F3-8CA4-4450-99F7-D2D52E3AE4DF}"
 EndProject

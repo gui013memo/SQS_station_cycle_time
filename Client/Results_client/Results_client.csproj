@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="my_Logger.cs" />
     <Compile Include="newPID.cs">
       <SubType>Form</SubType>
     </Compile>

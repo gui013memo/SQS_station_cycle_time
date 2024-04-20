@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EngineNumber_checker;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -15,6 +16,8 @@ namespace Results_client
 {
     public partial class Results : Form
     {
+        Logger logger = new Logger();
+
         newPID newPID_form = new newPID();
 
         TcpClient client;
@@ -39,6 +42,7 @@ namespace Results_client
         {
             InitializeComponent();
             this.FormClosing += Results_FormClosing;
+            this.TopMost = true;
         }
 
         private void Results_FormClosing(object sender, FormClosingEventArgs e)
@@ -51,7 +55,7 @@ namespace Results_client
         {
             if (Btn_connect.Text == "Start Listening")
             {
-                ClientThread = new Thread(() => ClientWorkThread(cts.Token));
+                ClientThread = new Thread(() => ClientWorkThread(cts.Token)); 
                 ClientThread.Start();
 
                 Btn_connect.Text = "Stop Listening";
@@ -79,8 +83,11 @@ namespace Results_client
             bool m1 = false;
             bool m2 = false;
 
+            if (client.Connected)
+                logger.Log("client connected");
+
             while (client.Connected)
-            {
+            { 
                 int i;
                 while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                 {
@@ -94,12 +101,12 @@ namespace Results_client
                         {
                             m1 = true;
 
-                            newPID = data.Remove(0, data.IndexOf(':'));
+                            newPID = data.Remove(0, data.IndexOf(':') + 1);
 
                             if (newPID_form.Visible == false)
                             {
                                 newPID_form.Show();
-                                newPID_form.TopLevel = true;
+                                newPID_form.TopMost = true; 
                             }
 
                             this.Invoke((MethodInvoker)delegate
@@ -107,13 +114,17 @@ namespace Results_client
                                 newPID_form.lb_CurrentEngineNumberValue.Text = newPID;
                                 newPID_form.Refresh();
                             });
+
+                            logger.Log("newPID: " + newPID);
                         }
                         else if (data.Contains("cmd-TimerStart") && !m2)
                         {
                             m2 = true;
 
-                            newPID_form.stopwatch.Restart();
+                            newPID_form.stopwatch.Restart(); 
                             newPID_form.newPID_timer.Start();
+
+                            logger.Log("TimeStarted on client");
                         }
                         else if (data.Contains("cmd-TimerStop"))
                         {
@@ -123,9 +134,13 @@ namespace Results_client
                             newPID_form.stopwatch.Stop();
                             newPID_form.newPID_timer.Stop();
 
-                            TimeSpan.TryParse(data.Remove(0, data.IndexOf(':')), out elapsedTimeFromServer);
+                            TimeSpan.TryParse(data.Remove(0, data.IndexOf(':') + 1), out elapsedTimeFromServer);
 
                             newPID_form.AssyEnded(elapsedTimeFromServer);
+
+                            logger.Log("TimeEnded on client:" +
+                                "\r\nElapsedTimeLocal: " + newPID_form.stopwatch.Elapsed +
+                                "\r\nElapsedTime from server: " + elapsedTimeFromServer);
                         }
                     });
                 }
