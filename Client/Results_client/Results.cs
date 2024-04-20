@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net.Sockets;
@@ -14,6 +15,8 @@ namespace Results_client
 {
     public partial class Results : Form
     {
+        newPID newPID_form = new newPID();
+
         TcpClient client;
         NetworkStream stream;
         Byte[] bytes = new Byte[256];
@@ -23,13 +26,24 @@ namespace Results_client
         Thread ClientThread;
 
         bool mem = false;
-        bool newPID = false;
+        bool newPIDmem = false;
         bool timerStart = false;
         bool timerStop = false;
+
+        string newPID = null;
+
+        Stopwatch stopwatch = new Stopwatch();
+        TimeSpan elapsedTimeFromServer;
 
         public Results()
         {
             InitializeComponent();
+            this.FormClosing += Results_FormClosing;
+        }
+
+        private void Results_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            client.Close();
         }
 
         private void Btn_connect_Click(object sender, EventArgs e)
@@ -59,43 +73,42 @@ namespace Results_client
             client = new TcpClient("172.16.90.231", 13000);
             stream = client.GetStream();
 
-            while (true)
+
+            int i;
+            while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
             {
-                int i;
-                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0 && !mem)
+                data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+
+                this.Invoke((MethodInvoker)delegate
                 {
-                    data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
+                    // Updating label text.
+                    Tb_ClientConsole.Text += "cmd received: " + data + "\r\n";
 
-                    this.Invoke((MethodInvoker)delegate
+                    bool tstop = data.Contains("cmd-TimerStop");
+
+                    if (data.Contains("cmd-NewPID"))
                     {
-                        // Updating label text.
-                        Tb_ClientConsole.Text += "cmd received: " + data + "\r\n";
-
-                        switch (data)
-                        {
-                            case "cmd-NewPID":
-                                newPID = true;
-                                break;
-                            case "cmd-TimerStart":
-                                timerStart = true;
-                                break;
-                            case "cmd-TimerStop":
-                                timerStop = true;
-                                break;
-                        }
-                    });
-                    mem = true;
-                }
-
+                        newPID = data.Remove(0, data.IndexOf(':'));
+                        newPID_form.Show();
+                    }
+                    else if (data.Contains("cmd-TimerStart"))
+                    {
+                        stopwatch.Restart();
+                    }
+                    else if (data.Contains("cmd-TimerStop"))
+                    {
+                        stopwatch.Stop();
+                        TimeSpan.TryParse(data.Remove(0, data.IndexOf(':')), out elapsedTimeFromServer);
+                    }
+                });
+                mem = true;
             }
+
+
         }
 
         private void tim1_Tick(object sender, EventArgs e)
         {
-            if (newPID)
-            {
-
-            }
         }
     }
 }

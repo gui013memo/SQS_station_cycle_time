@@ -15,6 +15,12 @@ namespace Results_client
         public newPID()
         {
             InitializeComponent();
+            this.FormClosing += NewPID_FormClosing;
+        }
+
+        private void NewPID_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            throw new NotImplementedException();
         }
     }
 }

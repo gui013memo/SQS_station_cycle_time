@@ -39,6 +39,7 @@
             this.Btn_startTCPServer = new System.Windows.Forms.Button();
             this.Tb_connStringTCPServer = new System.Windows.Forms.TextBox();
             this.Tb_TCPConsole = new System.Windows.Forms.TextBox();
+            this.button1 = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // Btn_start
@@ -124,25 +125,36 @@
             this.Tb_connStringTCPServer.Location = new System.Drawing.Point(319, 339);
             this.Tb_connStringTCPServer.Margin = new System.Windows.Forms.Padding(4);
             this.Tb_connStringTCPServer.Name = "Tb_connStringTCPServer";
-            this.Tb_connStringTCPServer.Size = new System.Drawing.Size(83, 22);
+            this.Tb_connStringTCPServer.Size = new System.Drawing.Size(102, 22);
             this.Tb_connStringTCPServer.TabIndex = 7;
             this.Tb_connStringTCPServer.Text = "172.16.90.231";
             // 
             // Tb_TCPConsole
             // 
-            this.Tb_TCPConsole.Location = new System.Drawing.Point(307, 245);
+            this.Tb_TCPConsole.Location = new System.Drawing.Point(319, 245);
             this.Tb_TCPConsole.Margin = new System.Windows.Forms.Padding(4);
             this.Tb_TCPConsole.Multiline = true;
             this.Tb_TCPConsole.Name = "Tb_TCPConsole";
-            this.Tb_TCPConsole.Size = new System.Drawing.Size(109, 86);
+            this.Tb_TCPConsole.Size = new System.Drawing.Size(102, 86);
             this.Tb_TCPConsole.TabIndex = 8;
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(327, 160);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 9;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
-            this.ClientSize = new System.Drawing.Size(426, 432);
+            this.ClientSize = new System.Drawing.Size(434, 432);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.Tb_TCPConsole);
             this.Controls.Add(this.Tb_connStringTCPServer);
             this.Controls.Add(this.Btn_startTCPServer);
@@ -172,6 +184,7 @@
         private System.Windows.Forms.Button Btn_startTCPServer;
         private System.Windows.Forms.TextBox Tb_connStringTCPServer;
         private System.Windows.Forms.TextBox Tb_TCPConsole;
+        private System.Windows.Forms.Button button1;
     }
 }
 

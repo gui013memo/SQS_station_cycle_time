@@ -31,26 +31,30 @@ namespace SQS_station_cycle_time
         string ipAddress = "127.0.0.1";
 
         Stopwatch stopwatch = new Stopwatch();
-        TimeSpan elapsedTMax; 
-        TimeSpan elapsedTMin; 
+        TimeSpan elapsedTMax;
+        TimeSpan elapsedTMin;
 
         string pathPrintOut = "C:\\ProgramData\\Atlas Copco\\SQS\\LBMS\\work\\printout";
+        string printOutResult = null;
+        DateTime printOutDateTime;
 
         bool mem = false;
-        bool mem2 = false;
+        bool newPID_mem = false;
         bool memServer = false;
+        bool newIncompletePID_mem = false;
 
         CancellationTokenSource cts = new CancellationTokenSource();
         Thread TCPThread;
 
         TcpListener server = null;
+        bool isListening = false;
 
         public Main()
-        { 
+        {
             InitializeComponent();
             this.FormClosing += Main_FormClosing;
             logger.Log("EngineNumber-Checker app Opened!");
-             
+
             this.TopMost = true;
 
             appStartTime = DateTime.Now;
@@ -63,7 +67,7 @@ namespace SQS_station_cycle_time
                 server.Stop();
                 cts.Cancel();
             }
-          
+
             logger.Log("SQS_SCT app closed");
             TCPThread = null;
         }
@@ -104,17 +108,34 @@ namespace SQS_station_cycle_time
             return _currentText.ToString();
         }
 
-        public void GetParameters()
+        public void UpdateParameters()
         {
             string query = @"SELECT [STATION]
                                   ,[SCREEN]
                                   ,[ET_MAX]
                                   ,[ET_MIN]
                               FROM [SQS_SCT].[dbo].[PARAMETERS]";
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                using (SqlCommand command = new SqlCommand(query, connection))
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        elapsedTMax = reader.GetTimeSpan(2);
+                        elapsedTMin = reader.GetTimeSpan(3);
+                    }
+                }
+            }
         }
 
         public void InsertValuesDB(TimeSpan elapsedTime)
         {
+            UpdateParameters();
+
             string productID = ExtractTextFromXps(pathPrintOut);
 
             string result = null;
@@ -174,32 +195,49 @@ namespace SQS_station_cycle_time
             //Elapsed time is get by application stopwatch, exact time of beginning and ending of screen is disregarded
             string[] fileNames = Directory.GetFiles(pathPrintOut);
 
-            if (Directory.GetCreationTime(fileNames[fileNames.Length - 1]) > appStartTime && !mem2)
-            {
-                logger.Log("New PID: " + ExtractTextFromXps(pathPrintOut));
+            printOutDateTime = Directory.GetCreationTime(fileNames[fileNames.Length - 1]);
 
-                mem2 = true;
+            if (printOutDateTime > appStartTime)
+            {
+                appStartTime = printOutDateTime; // I do it for update the last PID 
+
+                printOutResult = ExtractTextFromXps(pathPrintOut);
+
+                logger.Log("New PID: " + printOutResult);
+
+
+                if (mem || newPID_mem)
+                {
+                    newIncompletePID_mem = true;
+                    mem = false;
+                    newPID_mem = false;
+                    Tb_Console.Text += "newPID without end process (maybe PID release at SQS)";
+                    logger.Log("newPID without end process (maybe PID release at SQS)");
+                }
+                else { newPID_mem = true; }
+
             }
 
-            if (ModServer.holdingRegisters[1] == 1 && !mem)
+            if (ModServer.holdingRegisters[1] == 1 && !mem && newPID_mem)
             {
                 mem = true;
                 stopwatch.Restart();
-                Tb_Console.Text += "Timer started \r\n";
+                Tb_Console.Text += "Timer STARTED to PID: " + printOutResult + "\r\n";
 
-                logger.Log("Timer started");
+                logger.Log("Timer started to PID: " + printOutResult);
             }
             else if (ModServer.holdingRegisters[1] == 2 && mem)
             {
                 mem = false;
-                mem2 = false;
+                newPID_mem = false;
+
                 stopwatch.Stop();
                 InsertValuesDB(stopwatch.Elapsed);
 
-                Tb_Console.Text += "Timer ended \r\n";
+                Tb_Console.Text += "Timer ENDED to PID: " + printOutResult + "\r\n";
                 Tb_Console.Text += "Elapsed time: " + stopwatch.Elapsed + "\r\n";
 
-                logger.Log("Timer ended with elapsed time: " + stopwatch.Elapsed);
+                logger.Log("Timer ended to PID: " + printOutResult);
             }
         }
 
@@ -238,7 +276,7 @@ namespace SQS_station_cycle_time
                 lb_ClientsQty.Text = "0";
             }
         }
-         
+
         private void Timer1_Tick(object sender, EventArgs e)
         {
             if (Btn_start.Text == "STOP")
@@ -274,7 +312,8 @@ namespace SQS_station_cycle_time
             }
             else if (Btn_startTCPServer.Text == "TOFF TCP")
             {
-                server.Stop();
+                if (isListening)
+                    server.Stop();
 
                 cts.Cancel();
                 TCPThread = null;
@@ -288,63 +327,95 @@ namespace SQS_station_cycle_time
         private void TCPWorkThread(CancellationToken token)
         {
             bool tmem = false;
+            bool tmem2 = false;
 
             Int32 port = 13000;
             IPAddress localAddr = IPAddress.Parse(Tb_connStringTCPServer.Text);
 
             server = new TcpListener(localAddr, port);
 
-            try
+            while (!token.IsCancellationRequested)
             {
-                server.Start();
-                this.Invoke((MethodInvoker)delegate
+                try
                 {
-                    Tb_TCPConsole.Text += ("Waiting for a connection... ");
-                });
+                    server.Start();
+                    isListening = true;
 
-
-                TcpClient client = server.AcceptTcpClient();
-                server.Start();
-                this.Invoke((MethodInvoker)delegate
-                {
-                    Tb_TCPConsole.Text += ("Connected!");
-                });
-
-
-                NetworkStream stream = client.GetStream();
-
-                while (client.Connected)
-                {
-                    if (mem2 && !tmem)
+                    this.Invoke((MethodInvoker)delegate
                     {
-                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-NewPID");
+                        Tb_TCPConsole.Text += ("Waiting for a connection... ");
+                    });
 
-                        stream.Write(data, 0, data.Length);
+                    TcpClient client = server.AcceptTcpClient();
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Tb_TCPConsole.Text += ("+ Connected!");
+                    });
 
-                        tmem = true;
+                    NetworkStream stream = client.GetStream();
+
+                    while (client.Connected)
+                    {
+                        if (Timer1.Enabled)
+                        {
+                            
+                            if(newIncompletePID_mem)
+                            {
+                                tmem = false;
+                                tmem2 =false;
+                            }
+
+                            if (newPID_mem && !tmem)
+                            {
+                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-NewPID:" + printOutResult);
+
+                                stream.Write(data, 0, data.Length);
+
+                                tmem = true;
+                            }
+
+                            if (mem && tmem && !tmem2)
+                            {
+                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStart:" + stopwatch.Elapsed);
+
+                                stream.Write(data, 0, data.Length);
+
+                                tmem2 = true;
+                            }
+                            else if (!mem && tmem2)
+                            {
+                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStop:" + stopwatch.Elapsed);
+
+                                stream.Write(data, 0, data.Length);
+
+                                tmem = false;
+                                tmem2 = false;
+                            }
+                        }
                     }
 
-                    if (mem && tmem)
-                    {
-                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStart");
+                    if (!client.Connected)
+                        Tb_TCPConsole.Text += " - Client desconnected!";
+                }
+                catch (SocketException exc)
+                {
+                    logger.Log("SocketException: \r\n" + exc);
 
-                        stream.Write(data, 0, data.Length);
-                    }
-                    else if (!mem && tmem)
-                    {
-                        Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStop");
-
-                        stream.Write(data, 0, data.Length);
-
-                        tmem = false;
-                    }
-
+                    server.Stop();
+                    isListening = false;
                 }
             }
-            catch (SocketException exc)
-            {
-                logger.Log("SocketException: \r\n" + exc);
-            }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            string s1 = "cmd-NewPID:" + "REM1";
+            string s2 = "cmd-TimerStart:" + "REM22";
+            string s3 = "cmd-TimerStop:" + "REM333";
+
+            Tb_Console.Text += s1.Remove(0, s1.IndexOf(':')) + "\r\n";
+            Tb_Console.Text += s2.Remove(0, s2.IndexOf(':')) + "\r\n";
+            Tb_Console.Text += s3.Remove(0, s3.IndexOf(':')) + "\r\n";
         }
     }
 }
