@@ -6,14 +6,11 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Net;
 using System.Windows.Forms;
-using GroupDocs.Viewer;
-using GroupDocs.Viewer.Options;
 using System.Text;
 using System.Windows.Xps.Packaging;
 using System.Xml;
 using System.IO;
 using System.Net.Sockets;
-using GroupDocs.Viewer.Results;
 using System.Threading;
 
 
@@ -393,7 +390,7 @@ namespace SQS_station_cycle_time
                 try
                 {
                     server.Start();
-                    isListening = true;
+                    isListening = true; 
 
                     this.Invoke((MethodInvoker)delegate
                     {

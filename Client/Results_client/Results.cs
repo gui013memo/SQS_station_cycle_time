@@ -62,8 +62,8 @@ namespace Results_client
 
 
 
-                tim1.Start();
-            }
+                tim1.Start(); 
+            } 
             else if (Btn_connect.Text == "Stop Listening")
             {
                 cts.Cancel();
@@ -77,9 +77,9 @@ namespace Results_client
 
         private void ClientWorkThread(CancellationToken token)
         {
-            client = new TcpClient("172.16.90.231", 13000);
+            client = new TcpClient("172.16.200.10", 13000);
             stream = client.GetStream();
-
+             
             bool m1 = false;
             bool m2 = false;
 
@@ -99,17 +99,18 @@ namespace Results_client
 
                         if (data.Contains("cmd-NewPID") && !m1)
                         {
-                            m1 = true;
+                             m1 = true;
 
                             newPID = data.Remove(0, data.IndexOf(':') + 1);
 
                             if (newPID_form.Visible == false)
                             {
                                 newPID_form.Show();
+                                newPID_form.BackColor = Color.DodgerBlue;
                                 newPID_form.TopMost = true; 
                             }
 
-                            this.Invoke((MethodInvoker)delegate
+                            this.Invoke((MethodInvoker)delegate 
                             {
                                 newPID_form.lb_CurrentEngineNumberValue.Text = newPID;
                                 newPID_form.Refresh();
