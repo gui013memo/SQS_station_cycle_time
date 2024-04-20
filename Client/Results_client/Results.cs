@@ -43,6 +43,7 @@ namespace Results_client
 
         private void Results_FormClosing(object sender, FormClosingEventArgs e)
         {
+            cts.Cancel();
             client.Close();
         }
 
@@ -54,6 +55,8 @@ namespace Results_client
                 ClientThread.Start();
 
                 Btn_connect.Text = "Stop Listening";
+
+
 
                 tim1.Start();
             }
@@ -73,36 +76,61 @@ namespace Results_client
             client = new TcpClient("172.16.90.231", 13000);
             stream = client.GetStream();
 
+            bool m1 = false;
+            bool m2 = false;
 
-            int i;
-            while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
+            while (client.Connected)
             {
-                data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-
-                this.Invoke((MethodInvoker)delegate
+                int i;
+                while ((i = stream.Read(bytes, 0, bytes.Length)) != 0)
                 {
-                    // Updating label text.
-                    Tb_ClientConsole.Text += "cmd received: " + data + "\r\n";
+                    data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
 
-                    bool tstop = data.Contains("cmd-TimerStop");
+                    this.Invoke((MethodInvoker)delegate
+                    {
+                        Tb_ClientConsole.Text += "cmd received: " + data + "\r\n";
 
-                    if (data.Contains("cmd-NewPID"))
-                    {
-                        newPID = data.Remove(0, data.IndexOf(':'));
-                        newPID_form.Show();
-                    }
-                    else if (data.Contains("cmd-TimerStart"))
-                    {
-                        stopwatch.Restart();
-                    }
-                    else if (data.Contains("cmd-TimerStop"))
-                    {
-                        stopwatch.Stop();
-                        TimeSpan.TryParse(data.Remove(0, data.IndexOf(':')), out elapsedTimeFromServer);
-                    }
-                });
-                mem = true;
+                        if (data.Contains("cmd-NewPID") && !m1)
+                        {
+                            m1 = true;
+
+                            newPID = data.Remove(0, data.IndexOf(':'));
+
+                            if (newPID_form.Visible == false)
+                            {
+                                newPID_form.Show();
+                                newPID_form.TopLevel = true;
+                            }
+
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                newPID_form.lb_CurrentEngineNumberValue.Text = newPID;
+                                newPID_form.Refresh();
+                            });
+                        }
+                        else if (data.Contains("cmd-TimerStart") && !m2)
+                        {
+                            m2 = true;
+
+                            newPID_form.stopwatch.Restart();
+                            newPID_form.newPID_timer.Start();
+                        }
+                        else if (data.Contains("cmd-TimerStop"))
+                        {
+                            m1 = false;
+                            m2 = false;
+
+                            newPID_form.stopwatch.Stop();
+                            newPID_form.newPID_timer.Stop();
+
+                            TimeSpan.TryParse(data.Remove(0, data.IndexOf(':')), out elapsedTimeFromServer);
+
+                            newPID_form.AssyEnded(elapsedTimeFromServer);
+                        }
+                    });
+                }
             }
+
 
 
         }

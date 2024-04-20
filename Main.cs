@@ -208,7 +208,8 @@ namespace SQS_station_cycle_time
 
                 if (mem || newPID_mem)
                 {
-                    newIncompletePID_mem = true;
+                    newIncompletePID_mem = true; //Used just for TCP Client restart process on client side (the client side restart this flag)
+
                     mem = false;
                     newPID_mem = false;
                     Tb_Console.Text += "newPID without end process (maybe PID release at SQS)";
@@ -328,6 +329,7 @@ namespace SQS_station_cycle_time
         {
             bool tmem = false;
             bool tmem2 = false;
+            bool isWaitingForClientACK = false;
 
             Int32 port = 13000;
             IPAddress localAddr = IPAddress.Parse(Tb_connStringTCPServer.Text);
@@ -356,41 +358,42 @@ namespace SQS_station_cycle_time
 
                     while (client.Connected)
                     {
-                        if (Timer1.Enabled)
+                        if (newIncompletePID_mem)
                         {
-                            
-                            if(newIncompletePID_mem)
-                            {
-                                tmem = false;
-                                tmem2 =false;
-                            }
+                            tmem = false;
+                            tmem2 = false;
+                            newIncompletePID_mem = false;
+                        }
 
-                            if (newPID_mem && !tmem)
-                            {
-                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-NewPID:" + printOutResult);
 
-                                stream.Write(data, 0, data.Length);
+                        if (newPID_mem && !tmem)
+                        {
+                            Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-NewPID:" + printOutResult);
+                            stream.Write(data, 0, data.Length);
 
-                                tmem = true;
-                            }
+                            tmem = true;
+                        }
 
-                            if (mem && tmem && !tmem2)
-                            {
-                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStart:" + stopwatch.Elapsed);
 
-                                stream.Write(data, 0, data.Length);
+                        if (mem && tmem && !tmem2)
+                        {
+                            int i;
 
-                                tmem2 = true;
-                            }
-                            else if (!mem && tmem2)
-                            {
-                                Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStop:" + stopwatch.Elapsed);
+                            Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStart:" + stopwatch.Elapsed);
+                            stream.Write(data, 0, data.Length);
 
-                                stream.Write(data, 0, data.Length);
+                            tmem2 = true;
 
-                                tmem = false;
-                                tmem2 = false;
-                            }
+                        }
+
+
+                        if (!mem && tmem2)
+                        {
+                            Byte[] data = System.Text.Encoding.ASCII.GetBytes("cmd-TimerStop:" + stopwatch.Elapsed);
+                            stream.Write(data, 0, data.Length);
+
+                            tmem = false;
+                            tmem2 = false;
                         }
                     }
 
